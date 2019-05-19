@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">TweebrJagadish</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">स्वागत</string>
+    <string name="browse_img">स्वागत</string>
+    <string name="browseandtrim">स्वागत</string>
+    <string name="hint">स्वागत</string>
+    <string name="browseandaddtext">स्वागत</string>
+    <string name="navimg">स्वागत</string>
+    <string name="navviseo">स्वागत</string>
+    <string name="contrast">स्वागत</string>
+    <string name="blur">स्वागत</string>
+    <string name="crop">स्वागत</string>
+    <string name="navtext">स्वागत</string>
+</resources>

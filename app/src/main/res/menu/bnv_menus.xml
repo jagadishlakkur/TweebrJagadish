@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:title="@string/navimg"
+        android:id="@+id/menu_images"
+        android:icon="@drawable/icon_images"
+        />
+    <item android:title="@string/navviseo"
+        android:icon="@drawable/icon_video"
+        android:id="@+id/menu_videos"
+        />
+    <item android:title="@string/navtext"
+        android:icon="@drawable/icon_video"
+        android:id="@+id/menu_videos_text"
+        />
+
+</menu>
