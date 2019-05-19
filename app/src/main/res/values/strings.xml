@@ -6,7 +6,7 @@
     <string name="browse_img">Browse Image</string>
     <string name="browseandtrim">Browse and Trim Video</string>
     <string name="hint">Enter Video Text</string>
-    <string name="browseandaddtext">Browse and Add Text</string>
+    <string name="browseandaddtext">Capture and Add Text</string>
     <string name="navimg">Images</string>
     <string name="navviseo">Video Trim</string>
     <string name="contrast">Contrast</string>

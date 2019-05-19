@@ -30,6 +30,7 @@ dependencies {
     implementation 'jp.wasabeef:picasso-transformations:2.2.1'
     implementation 'jp.co.cyberagent.android.gpuimage:gpuimage-library:1.4.1'
     implementation 'life.knowledge4:k4l-video-trimmer:1.0'
+    implementation 'com.writingminds:FFmpegAndroid:0.3.2'
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'

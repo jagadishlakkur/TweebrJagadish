@@ -2,6 +2,7 @@ package com.jagadish.tweebrjagadish.Fragments;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -9,12 +10,15 @@ import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,10 +30,24 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
+import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler;
+import com.github.hiteshsondhi88.libffmpeg.FFmpeg;
+import com.github.hiteshsondhi88.libffmpeg.LoadBinaryResponseHandler;
+import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegCommandAlreadyRunningException;
+import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedException;
 import com.jagadish.tweebrjagadish.R;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
+import jp.wasabeef.picasso.transformations.internal.Utils;
+
+import static android.media.tv.TvTrackInfo.TYPE_VIDEO;
 
 
 public class Videos_Frag extends Fragment {
@@ -49,7 +67,8 @@ public class Videos_Frag extends Fragment {
    Button browse_textvideo;
 
    Uri videouri;
-
+   ProgressDialog progressDialog;
+    FFmpeg ffmpeg;
     public Videos_Frag() {
         // Required empty public constructor
     }
@@ -88,6 +107,32 @@ public class Videos_Frag extends Fragment {
         if (view==null)
         {
             view= inflater.inflate(R.layout.fragment_videos_, container, false);
+
+            progressDialog=new ProgressDialog(getActivity());
+            progressDialog.setMessage("Loading..");
+
+
+             ffmpeg = FFmpeg.getInstance(getActivity());
+            try
+            {
+                ffmpeg.loadBinary(new LoadBinaryResponseHandler() {
+
+                    @Override
+                    public void onStart() {}
+
+                    @Override
+                    public void onFailure() {}
+
+                    @Override
+                    public void onSuccess() {}
+
+                    @Override
+                    public void onFinish() {}
+                });
+            } catch (FFmpegNotSupportedException e) {
+                // Handle if FFmpeg is not supported by device
+                Log.d("ResponseOutputBinEx",e.getMessage().toString());
+            }
 
             text=(EditText)view.findViewById(R.id.video_texthint);
             text_videoview=(VideoView)view.findViewById(R.id.videos_videotext);
@@ -156,10 +201,12 @@ public class Videos_Frag extends Fragment {
 
 
               videouri=data.getData();
-              text_videoview.setVisibility(View.VISIBLE);
+             /* text_videoview.setVisibility(View.VISIBLE);
 
               text_videoview.setVideoURI(videouri);
-              text_videoview.start();
+              text_videoview.start();*/
+
+             embedTextOnVideo(text.getText().toString(),videouri.getPath(),16);
 
 
 
@@ -170,48 +217,110 @@ public class Videos_Frag extends Fragment {
 
     }
 
-    private void TrimVideofile(Uri data) {
 
-        Intent trimVideoIntent = new Intent("com.android.camera.action.TRIM");
+    public void embedTextOnVideo(String text, String path, int fontSize)
+    {
 
-// The key for the extra has been discovered from com.android.gallery3d.app.PhotoPage.KEY_MEDIA_ITEM_PATH
-        trimVideoIntent.putExtra("media-item-path",data.getPath());
-        trimVideoIntent.setData(data);
+        final File out = getOutputFile(TYPE_VIDEO);
 
-// Check if the device can handle the Intent
-        List<ResolveInfo> list = getActivity().getPackageManager().queryIntentActivities(trimVideoIntent, 0);
-        if (null != list && list.size() > 0) {
-            startActivityForResult(trimVideoIntent,30); // Fires TrimVideo activity into being active
-        }else {
-            Toast.makeText(getActivity(), "not supported",Toast.LENGTH_SHORT).show();
+        String[] cmd = new String[] {
+                "-y", "-i", path, "-vf", "drawtext=text='helloworld':fontfile=/storage/emulated/0/text.ttf: fontcolor=white: fontsize=24: x=(w-tw)/2: y=(h/PHI)+th box=0:", out.getAbsolutePath()
+        };
+
+        try {
+
+
+
+
+            ffmpeg.execute(cmd, new ExecuteBinaryResponseHandler() {
+
+                @Override
+                public void onStart() {
+
+                    progressDialog.show();
+                }
+
+
+                @Override
+                public void onProgress(String message) {}
+
+                @Override
+                public void onFailure(String message) {
+                    progressDialog.dismiss();
+                    Log.d("ResponseOutputFailure",message);
+                }
+
+                @Override
+                public void onSuccess(String message) {
+                    progressDialog.dismiss();
+                    Log.d("ResponseOutputSuces",message);
+
+
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            text_videoview.setVisibility(View.VISIBLE);
+
+                            text_videoview.setVideoPath(out.getPath());
+                            text_videoview.start();
+                        }
+                    });
+                }
+
+                @Override
+                public void onFinish() {
+                    progressDialog.dismiss();
+                    Log.d("ResponseOutput","finish");
+                }
+            });
+        } catch (FFmpegCommandAlreadyRunningException e) {
+            // Handle if FFmpeg is already running
+            Log.d("ResponseOutputCmdEx",e.toString());
         }
     }
 
-
-    void WriteTextOnImageView(Context context,String text,int x,int y)
-    {
-
-        FrameLayout mFrame=new FrameLayout(context);
-        TextView tv=new TextView(context);
-        tv.setTextColor(getResources().getColor(R.color.colorAccent));
-
-        if(x!=0 && y!=0)
-        {
-            FrameLayout.LayoutParams mParams=new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
-            mFrame.setLayoutParams(mParams);
-            mFrame.setPadding(x, y, 0, 0);
-            tv.setLayoutParams(mParams);
-            tv.setText(text);
-            mFrame.addView(tv);
-           // frameLayout.addView(mFrame);
-
-
-        }else {
-
-            Toast.makeText(context, "Wrong Co-ordinates", Toast.LENGTH_SHORT).show();
+    @Nullable
+    private Throwable writeDataToFile(byte[] data, File file) {
+        try {
+            FileOutputStream fos = new FileOutputStream(file);
+            fos.write(data);
+            fos.close();
+        } catch (FileNotFoundException e) {
+            return e;
+        } catch (IOException e) {
+            return e;
         }
 
+        return null;
+    }
 
+
+
+    @Nullable
+    private File getOutputFile(int type) {
+        File storageDir = Environment.getExternalStorageDirectory();
+
+// Create storage dir if it does not exist
+        if (!storageDir.exists()) {
+            if (!storageDir.mkdirs()) {
+                Log.e("ResponseOutput", "Failed to create directory:" + storageDir.getAbsolutePath());
+                return null;
+            }
+        }
+
+// media file name
+        String fileName = String.format("%s", new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()));
+
+
+        if (type == TYPE_VIDEO) {
+            fileName = String.format("VID_%s.mp4", fileName);
+        } else {
+            Log.e("ResponseOutput", "Unsupported media type:" + type);
+            return null;
+        }
+
+        return new File(String.format("%s%s%s", storageDir.getPath(), File.separator, fileName));
     }
 
 }

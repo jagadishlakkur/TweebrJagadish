@@ -158,10 +158,6 @@ public class VideoTrim_Frag extends Fragment  {
 
             if (requestCode == 21 && data != null) {
 
-
-
-
-
                 videoTrimmer.setVisibility(View.VISIBLE);
 
                 String path=FileUtils.getPath(getActivity(), data.getData());
